@@ -157,7 +157,7 @@ def add_numbers():
     depth = 3 # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
     visited_links = [url] # was here
     if not url.startswith("http://") or not url.startswith("https://"):
-        url = 'http://'+url
+        url = ''+url
     print(url)
     print(words)
     posts = set(main_alg(url, url, words, posts, visited_links, depth))
