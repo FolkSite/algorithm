@@ -62,7 +62,7 @@ def get_links(html, url, visited):
 
     return truelinks2
 
-def get_text(html):
+def get_text(html, link):
     soup = BeautifulSoup(html, "lxml")
 
     # kill all script and style elements
@@ -77,7 +77,7 @@ def get_text(html):
 
     div_saver2 = div_saver.copy()
 
-    for text in div_saver2:
+    for idx, text in enumerate(div_saver2):
         # get text - если soup.body.get_text() - вернет только боди тд по аналогии
         # text = soup.get_text()
 
@@ -86,7 +86,7 @@ def get_text(html):
         # break multi-headlines into a line each
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         # drop blank lines
-        text2 = '<br>'.join(chunk for chunk in chunks if chunk)
+        text2 = '<a style="cursor: pointer;" onClick=\'$("#nmb' + str(idx) + '").css("display", "block");\'>' + link + '</a>' + '<div style="display: none; border: solid 1px black;" id="nmb' + str(idx) + '">' + ''.join(chunk for chunk in chunks if chunk) + '</div><br/>'
         div_saver.remove(text)
         div_saver.append(text2)
 
@@ -103,7 +103,12 @@ def find_words(url, text, words, posts):
     for word in words:
         if word in text:
             if url not in posts:
-                posts.append((url, text))
+                #text = '<div>'  +text + '</div>'
+                #posts.append((url, text))
+                pattern = re.compile(word, re.IGNORECASE)
+                text = pattern.sub('<span style="color: red;">' + word + '</span>', text)
+                #text = text.lower().replace(word.lower(), '<span style="color: red;">' + word.lower() + '</span>')
+                posts.append(text)
     return posts
 
 
@@ -116,13 +121,16 @@ def main_alg(url, link, words, posts, visited_links, depth):
     except error.URLError as err:
         return posts
     # получаем строку с текстом в cсылке
-    text_full = list(set(get_text(html)))
+    text_full = list(set(get_text(html, link)))
     # ищем слова и получаем назад список постов, где они были найдены
     for text in text_full:
         posts = find_words(link, text, words, posts)
         # if fwords and fwords[0] not in posts:
         #     posts.extend([list(set(fwords)-set(posts)), text])
         posts = list(set(posts))
+        #for a in posts[-1]:
+        #    posts[-1] = '<div>' + ''.join(posts[-1]) + '</div>'
+        #posts[-1][1] = '<div>' + posts[-1][1] + '</div>'
         print("posts are found: {0}".format(len(posts)))
     #for post in posts:
         #print(post)
@@ -152,12 +160,19 @@ def add_numbers():
     word1 = request.args.get('word1')
     word2 = request.args.get('word2')
     word3 = request.args.get('word3')
-    words = [str(word1), str(word2), str(word3)]
+    words = []
+    #words = [str(word1), str(word2), str(word3)]
+    if len(word1.strip()) > 0:
+        words.append(word1)
+    if len(word2.strip()) > 0:
+        words.append(word2)
+    if len(word3.strip()) > 0:
+        words.append(word3)
     posts = [] # список найденных постов
     depth = 3 # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
     visited_links = [url] # was here
-    if not url.startswith("http://") or not url.startswith("https://"):
-        url = ''+url
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = 'http://'+url
     print(url)
     print(words)
     posts = set(main_alg(url, url, words, posts, visited_links, depth))
@@ -184,7 +199,7 @@ def run(url, words):
     with open('file.csv', 'w') as csvfile:
         spamwriter = csv.writer(csvfile,  delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL, dialect='excel')
         spamwriter.writerow(posts)
-    print(posts)
+    #print(posts)
 
 if __name__ == '__main__':
     # включает веб морду

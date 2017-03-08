@@ -118,13 +118,14 @@ margin:auto;
     var submit_form = function(e) {
       $.getJSON($SCRIPT_ROOT + '/_findwords', {
         url: $('input[name="url"]').val(),
-        word1: $('input[name="word1"]').val()
-        word2: $('input[name="word2"]').val()
+        word1: $('input[name="word1"]').val(),
+        word2: $('input[name="word2"]').val(),
         word3: $('input[name="word3"]').val()
       }, function(data) {
 		console.log(data)
         $('#result').html(data.result);
         $('input[name=url]').focus().select();
+		$('#progress').css('display', 'none');
       });
       return false;
     };
@@ -143,16 +144,17 @@ margin:auto;
 <div id="text">
 <p>
   <p>url</p>
-  <input type="text" size="20" name="url"> <br>
+  <input type="text" size="20" name="url" value="http://toyota-axsel.com"> <br>
   <p>word1</p>
-  <input type="text" size="10" name="word1"> <br>
+  <input type="text" size="10" name="word1" value="price"> <br>
   <p>word2</p>
   <input type="text" size="10" name="word2"> <br>
   <p>word3</p>
   <input type="text" size="10" name="word3"> <br>
   
-  <p><br><progress id="progressbar" value="0" ></progress></p>
-<p><a href=# id="calculate" onclick="loadProgressBar();">calculate server side</a>
+  <span id="progress" style="display: none;">PROGRESS BAR</span>
+  <!--<p><br><progress id="progressbar" value="0" max="1000"></progress></p>-->
+<p><a href=# id="calculate" onclick="$('#progress').css('display', 'block'); loadProgressBar();">calculate server side</a>
 <div id="table"><table></table></div>
 <div id="result1"><span id="result">?</span></div>
 </div>
