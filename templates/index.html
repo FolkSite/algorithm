@@ -119,6 +119,8 @@ margin:auto;
       $.getJSON($SCRIPT_ROOT + '/_findwords', {
         url: $('input[name="url"]').val(),
         word1: $('input[name="word1"]').val()
+        word2: $('input[name="word2"]').val()
+        word3: $('input[name="word3"]').val()
       }, function(data) {
 		console.log(data)
         $('#result').html(data.result);
