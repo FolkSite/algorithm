@@ -103,12 +103,9 @@ def find_words(url, text, words, posts):
     for word in words:
         if word in text:
             if url not in posts:
-                #text = '<div>'  +text + '</div>'
-                #posts.append((url, text))
                 pattern = re.compile(word, re.IGNORECASE)
                 text = pattern.sub('<span style="color: red;">' + word + '</span>', text)
-                #text = text.lower().replace(word.lower(), '<span style="color: red;">' + word.lower() + '</span>')
-                posts.append(text)
+                posts.append((url, text))
     return posts
 
 
@@ -124,13 +121,10 @@ def main_alg(url, link, words, posts, visited_links, depth):
     text_full = list(set(get_text(html, link)))
     # ищем слова и получаем назад список постов, где они были найдены
     for text in text_full:
-        posts = find_words(link, text, words, posts)
-        # if fwords and fwords[0] not in posts:
-        #     posts.extend([list(set(fwords)-set(posts)), text])
+        fwords = find_words(link, text, words, posts)
+        if fwords and fwords[0] not in posts:
+            posts.extend([list(set(fwords)-set(posts)), text])
         posts = list(set(posts))
-        #for a in posts[-1]:
-        #    posts[-1] = '<div>' + ''.join(posts[-1]) + '</div>'
-        #posts[-1][1] = '<div>' + posts[-1][1] + '</div>'
         print("posts are found: {0}".format(len(posts)))
     #for post in posts:
         #print(post)
@@ -156,7 +150,7 @@ def main_alg(url, link, words, posts, visited_links, depth):
 
 @app.route('/_findwords')
 def add_numbers():
-    url = request.args.get('url')
+    urls = request.args.get('url')
     word1 = request.args.get('word1')
     word2 = request.args.get('word2')
     word3 = request.args.get('word3')
@@ -170,17 +164,20 @@ def add_numbers():
         words.append(word3)
     posts = [] # список найденных постов
     depth = 3 # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
-    visited_links = [url] # was here
-    if not url.startswith("http://") and not url.startswith("https://"):
-        url = 'http://'+url
-    print(url)
-    print(words)
-    posts = set(main_alg(url, url, words, posts, visited_links, depth))
-    #print(posts)
-    str_to_serv = ''
-    for post in posts:
-        str_to_serv = str(post) + str_to_serv
-    return jsonify(result=str_to_serv)
+    if len(urls) > 1:
+        for url in urls:
+            visited_links = [url] # was here
+            if not url.startswith("http://") and not url.startswith("https://"):
+                url = 'http://'+url
+            posts = set(main_alg(url, url, words, posts, visited_links, depth))
+            with open('file.csv', 'w') as csvfile:
+                spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL,
+                                        dialect='excel')
+                spamwriter.writerow(posts)
+            str_to_serv = ''
+            for post in posts:
+                str_to_serv = str(post) + str_to_serv
+            return jsonify(result=str_to_serv)
 
 
 @app.route('/')
@@ -197,13 +194,13 @@ def run(url, words):
     print(words)
     posts = set(main_alg(url, url, words, posts, visited_links, depth))
     with open('file.csv', 'w') as csvfile:
-        spamwriter = csv.writer(csvfile,  delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL, dialect='excel')
+        spamwriter = csv.writer(csvfile,  delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, dialect='excel')
         spamwriter.writerow(posts)
     #print(posts)
 
 if __name__ == '__main__':
     # включает веб морду
-    app.run()
+    #app.run()
     # для тестов без веб-морды
-    #run('http://toyota-axsel.com', ["price"])
+    run('http://toyota-axsel.com', ["price"])
 
