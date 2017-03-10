@@ -170,10 +170,11 @@ def add_numbers():
             if not url.startswith("http://") and not url.startswith("https://"):
                 url = 'http://'+url
             posts = set(main_alg(url, url, words, posts, visited_links, depth))
-            with open('file.csv', 'w') as csvfile:
-                spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL,
-                                        dialect='excel')
-                spamwriter.writerow(posts)
+            with open('file.csv', 'w') as out:
+                csv_out = csv.writer(out)
+                csv_out.writerow(['link', 'text'])
+                for row in posts:
+                    csv_out.writerow(row)
             str_to_serv = ''
             for post in posts:
                 str_to_serv = str(post) + str_to_serv
@@ -193,9 +194,14 @@ def run(url, words):
     print(url)
     print(words)
     posts = set(main_alg(url, url, words, posts, visited_links, depth))
-    with open('file.csv', 'w') as csvfile:
-        spamwriter = csv.writer(csvfile,  delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, dialect='excel')
-        spamwriter.writerow(posts)
+    # with open('file.csv', 'w') as csvfile:
+    #     spamwriter = csv.writer(csvfile,  delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, dialect='excel')
+    #     spamwriter.writerow(posts)
+    with open('file.csv', 'w') as out:
+        csv_out = csv.writer(out)
+        csv_out.writerow(['link', 'text'])
+        for row in posts:
+            csv_out.writerow(row)
     #print(posts)
 
 if __name__ == '__main__':
