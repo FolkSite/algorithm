@@ -1,18 +1,77 @@
+﻿import pyexcel.ext.xlsx
 from urllib.request import urlopen
 from urllib import error
 import re
 from bs4 import BeautifulSoup
 import argparse
 import csv
-
-
-
+from werkzeug.utils import secure_filename
+import os
+from flask import send_from_directory
+import flask_excel as excel
 from flask import Flask
 from flask import request, render_template, redirect, url_for, jsonify
+UPLOAD_FOLDER = 'data'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'csv', 'xls', 'xlsx', 'docx'])
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route('/up', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('uploaded_file', filename=filename))
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+      <p><input type=file name=file>
+         <input type=submit value=Upload>
+    </form>
+    '''
+	
+	
+@app.route('/data/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename)
 
+@app.route('/upload/', methods=['GET', 'POST'])
+def uploadu_file():
+    if request.method == 'POST':
+        return jsonify({"result": request.get_array(field_name='file', encoding = "win-1251")})
+    return '''
+    <!doctype html>
+    <title>Upload an excel file</title>
+    <h1>Excel file upload (csv, tsv, csvz, tsvz only)</h1>
+    <form action="" method=post enctype=multipart/form-data>
+    <p><input type=file name=file><input type=submit value=Upload>
+   </form>
+    '''
 
+@app.route('/export', methods=['GET'])
+def export_records():
+    return excel.make_response_from_array([[1,2], [3, 4]], 'csv',
+                                          file_name="file", encoding = "ISO-8859-1")
+										  
+										  
 def parse_links(links, visited, url):
     # убираем ссылки на на js и  css файлы
     timelist = []
@@ -94,8 +153,8 @@ def get_text(html, link):
 
 def read_url(url):
     with urlopen(url) as data:
-        enc = data.info().get_content_charset('utf-8')
-        html = data.read().decode(enc)
+        enc = data.info().get_content_charset('utf_8')
+        html = data.read().decode(enc).encode('win_1251')
     return html
 
 def find_words(url, text, words, posts):
@@ -206,7 +265,7 @@ def run(url, words):
 
 if __name__ == '__main__':
     # включает веб морду
-    #app.run()
+    app.run()
     # для тестов без веб-морды
-    run('http://toyota-axsel.com', ["price"])
+    #run('http://toyota-axsel.com', ["price"])
 
