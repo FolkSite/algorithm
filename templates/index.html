@@ -118,9 +118,9 @@ margin:auto;
     var submit_form = function(e) {
       $.getJSON($SCRIPT_ROOT + '/_findwords', {
         url: $('input[name="url"]').val(),
-        word1: $('input[name="word1"]').val(),
-        word2: $('input[name="word2"]').val(),
-        word3: $('input[name="word3"]').val()
+		word1: $('input[name="word1"]').val(),
+		word2: $('input[name="word2"]').val(),
+		word3: $('input[name="word3"]').val() 
       }, function(data) {
 		console.log(data)
         $('#result').html(data.result);
@@ -155,7 +155,7 @@ margin:auto;
   <span id="progress" style="display: none;">PROGRESS BAR</span>
   <!--<p><br><progress id="progressbar" value="0" max="1000"></progress></p>-->
 <p><a href=# id="calculate" onclick="$('#progress').css('display', 'block'); loadProgressBar();">calculate server side</a>
-<p><a href="/up" id="drum">calculate server side</a>
+<p><a href="/up" id="drum">UPLOAD FILE</a>
 <div id="table"><table></table></div>
 <div id="result1"><span id="result">?</span></div>
 </div>
