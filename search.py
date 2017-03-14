@@ -11,6 +11,9 @@ from flask import send_from_directory
 import flask_excel as excel
 from flask import Flask
 from flask import request, render_template, redirect, url_for, jsonify
+import xlrd
+from openpyxl import load_workbook
+
 UPLOAD_FOLDER = 'data'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'csv', 'xls', 'xlsx', 'docx'])
 
@@ -52,6 +55,7 @@ def upload_file():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
+							   
 
 @app.route('/upload/', methods=['GET', 'POST'])
 def uploadu_file():
@@ -153,8 +157,8 @@ def get_text(html, link):
 
 def read_url(url):
     with urlopen(url) as data:
-        enc = data.info().get_content_charset('utf_8')
-        html = data.read().decode(enc).encode('win_1251')
+        enc = data.info().get_content_charset('utf-8')
+        html = data.read().decode(enc)
     return html
 
 def find_words(url, text, words, posts):
@@ -210,10 +214,13 @@ def main_alg(url, link, words, posts, visited_links, depth):
 @app.route('/_findwords')
 def add_numbers():
     urls = request.args.get('url')
+    urls =  ('url')
     word1 = request.args.get('word1')
     word2 = request.args.get('word2')
     word3 = request.args.get('word3')
+    #value = ''
     words = []
+    #words = set(execsear(value))
     #words = [str(word1), str(word2), str(word3)]
     if len(word1.strip()) > 0:
         words.append(word1)
@@ -244,8 +251,15 @@ def add_numbers():
 def index():
     return render_template('index.html')
 
-
-
+#def execsear (value):
+    
+#	value = ''
+#    workbook = load_workbook('data/test_check.xlsx')
+#    worksheet = workbook.active
+#        for i in range (1, 29):
+#            worksheet.(1, i).value
+#    return value
+			
 def run(url, words):
     posts = [] # список найденных постов
     depth = 3 # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
