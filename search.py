@@ -64,7 +64,7 @@ def uploaded_file(filename):
 def uploadu_file():
 
     if request.method == 'POST':
-        return jsonify({"result": request.get_array(field_name='file', encoding = 'utf-8')})
+        return jsonify({"result": request.get_array(field_name='file', encoding = '')})
 		
     return '''
     <!doctype html>
@@ -268,10 +268,9 @@ def add_numbers():
     #word2 = request.args.get('word2')
     #word3 = request.args.get('word3')
     #value = ''
-    vals=[]
-    vals = set(execsear(vals))
+    vals = execsear()
     words = []
-    words.append(vals)
+    words.extend(vals)
     #words = [str(word1), str(word2), str(word3)]
     #if len(word1.strip()) > 0:
     #    words.append(word1)
@@ -302,14 +301,16 @@ def add_numbers():
 def index():
     return render_template('index.html')
 
-def execsear (vals):
-    vals = []
-    value = ''
-    workbook = open_workbook('data/test_check.xlsx')
-    worksheet = workbook.active
-    wb = (workbook)
-    sheet = wb.get_sheet(0) 
-    vals = [v[0].value for v in sheet.range('B1:B2')]
+def execsear():
+    import openpyxl as xl
+    workbook = xlrd.open_workbook('data/test_check.xlsx')
+    rb = xl.load_workbook('data/test_check.xlsx')
+    sheet = rb.sheet_by_index(0)
+    # # worksheet = workbook.active
+    # wb = (workbook)
+    # if wb.get_sheet(0):
+    #     sheet = wb.get_sheet(0)
+    vals = [v[0].value for v in sheet.range('B1:B29')]
     return vals
 			
 def run(url, words):
