@@ -120,7 +120,7 @@ def upload():
     response.mimetype = 'text/html'
     return response
 
-	@app.route('/app.js')
+@app.route('/app.js')
 def sencha_app():
     return redirect(url_for('static', filename='app.js'))
 	
