@@ -1,13 +1,41 @@
 {% extends "layout.html" %}
 {% block body %}
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>flaskextjsuploader</title>
-    <script src="http://extjs.cachefly.net/ext-4.1.1-gpl/ext-all.js"></script>
-    <link rel="stylesheet" href="http://extjs.cachefly.net/ext-4.1.1-gpl/resources/css/ext-all.css">
-    <script type="text/javascript" src="app.js?_dc=1350578621830"></script>
-</head>
-<body></body>
-</html>
+    <title>Upload an excel file</title>
+<script>
+	window.onload = function() {
+		console.log("begin");
+		
+		var jsonResult = '{{result_tab}}'.replace(/&#39;/g, '"');
+		console.log(jsonResult);
+		var json = null;
+		try {
+			var table = document.getElementById("json_result");
+			json = JSON.parse(jsonResult);
+			console.log(json.result.length);
+			for (var i = 0; i < json.result.length; i++) {
+				var row = table.insertRow(table.rows.length);
+				
+				for (var j = 0; j < json.result[i].length; j++) {
+					var cell = row.insertCell(j);
+					var newText  = document.createTextNode(json.result[i][j]);
+					cell.appendChild(newText);
+				}
+			}
+		} catch(e) {
+			console.log("error " + e);
+		} finally {
+		
+		}
+		
+		console.log("end");
+	}
+</script>
+<body>
+    <h1>Excel file upload (csv, tsv, csvz, tsvz only)</h1>
+    <form action="" method=post enctype=multipart/form-data>
+    <p><input type=file name=file><input type=submit value=Upload>
+   </form>
+   <table cellpadding=3 cellspacing=0 border=1 id="json_result">
+   </table>
+</body>
 {% endblock %}

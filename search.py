@@ -64,37 +64,10 @@ def uploaded_file(filename):
 def uploadu_file():
 
     if request.method == 'POST':
-        return jsonify({"result": request.get_array(field_name='file', encoding = '')})
+        return render_template('upfile.html', result_tab = {"result": request.get_array(field_name='file', encoding = 'utf-8')})
 		
-    return '''
-    <!doctype html>
-    <title>Upload an excel file</title>
-    <h1>Excel file upload (csv, tsv, csvz, tsvz only)</h1>
-    <form action="" method=post enctype=multipart/form-data>
-    <p><input type=file name=file><input type=submit value=Upload>
-	<script>
-	Ext.onReady(function(){
-    var tpl = new Ext.XTemplate
-        ('<h1>TIOBE Rate</h1>',
-        '<table>',
-        '<tr>',
-        '<td>Позиция на Ноябрь 2012</td>',
-        '<td>Язык программирования</td>',
-        '<td>Рейтинг</td>',
-        '</tr>',
-        '<tpl for=".">',
-            '<tr>',
-            '<td>{position}</td>',
-            '<td>{title}</td>',
-            '<td>{rate}</td>',
-            '</tr>',
-        '</tpl>',
-        '</table>');                          
-tpl.overwrite(Ext.getBody(), tiobeData);
-});
-	</script>
-   </form>
-    '''
+    return render_template('upfile.html')
+
 	
 @app.route('/export', methods=['GET'])
 def export_records():
@@ -300,6 +273,7 @@ def add_numbers():
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 def execsear():
     import openpyxl as xl
