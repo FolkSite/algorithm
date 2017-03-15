@@ -1,0 +1,209 @@
+{% extends "layout.html" %}
+{% block body %}
+ <style>
+            table {
+                border-collapse: collapse;
+                border: 2px black solid;
+                font: 12px sans-serif;
+            }
+
+            td {
+                border: 1px black solid;
+                padding: 5px;
+            }
+        </style>
+		<style>
+#progress {
+ color: #0063a6;
+  font-size: .6em;
+  line-height: 1.5em;
+  text-indent: .5em;
+  width: 15em;
+  height: 1.8em;
+  border: 1px solid #0063a6;
+  background: #fff;
+
+}
+.progress-bar {
+    position: fixed;
+    margin-top: 40px;
+    height: 48px;
+    border: 1px solid #cfcfcf;
+    padding: 5px;
+    width: 80%;
+}
+ 
+.progress-bar__inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #e9ebec;
+}
+
+.progress-bar__scale {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 48px;
+    width: 0px;
+    background-color: #00adef;
+    -webkit-transition: all 0.8s 0.2s;
+    transition: all 0.8s 0.2s;
+}
+ 
+.progress-bar__scale-25 {width: 25%;}
+.progress-bar__scale-50 {width: 50%;}
+.progress-bar__scale-75 {width: 75%;}
+.progress-bar__scale-100 {width: 100%;}
+.invis {visibility: hidden;}
+ 
+.knowledge-bl__txt-cont {position: relative;}
+ 
+.knowledge-bl__percentage {
+   position: fixed;
+    float: left;
+    width: 260px;
+    margin-top: 90px;
+    margin-left: 7px;
+    font-size: 98px;
+    font-weight: 700;
+    color: #00adef;
+    margin-bottom: 1000px;
+}
+ 
+.percentage-reserve-100 {
+    position: absolute;
+    width: 260px;
+    top: 36px;
+    left: 7px;
+    font-size: 98px;
+    font-weight: 700;
+    color: #00adef;
+    display: none;
+}
+.db {display: block !important;}
+
+<!-- #myProgress {
+  width: 30%;
+  background-color: #ddd;
+} -->
+
+</style>
+<style>
+#bodys{
+	max-width: 100%;
+	min-width:50%;
+	background-color: #aaaaaa;
+	max-height:100%;
+	min-height:90%;
+}
+#polya {
+	width: 1190px;
+	background-color: #ffffff;
+	padding-left: 100px;
+	padding-right: 100px;
+    margin-right: 15%;
+	margin-left: 15%;
+	min-height:90%;
+
+}
+#result {
+width: 50%;
+margin:auto;
+
+}
+</style>
+<script type="text/javascript">
+  $(function() {
+    var submit_form = function(e) {
+      $.getJSON($SCRIPT_ROOT + '/_findwords', {
+        url: $('input[name="url"]').val(),
+		/*word1: $('input[name="word1"]').val(),
+		word2: $('input[name="word2"]').val(),
+		word3: $('input[name="word3"]').val() */
+      }, function(data) {
+		console.log(data)
+        $('#result').html(data.result);
+        $('input[name=url]').focus().select();
+		$('#progress').css('display', 'none');
+      });
+      return false;
+    };
+    $('a#calculate').bind('click', submit_form);
+    $('input[type=text]').bind('keydown', function(e) {
+      if (e.keyCode == 13) {
+        submit_form(e);
+      }
+    });
+    $('input[name=a]').focus();
+  });
+</script>
+
+<div id="bodys">
+<div id="polya">
+<div id="text">
+<p>
+  <p>url</p>
+  <input type="text" size="20" name="url" value="http://toyota-axsel.com"> <br>
+  <p>word1</p>
+  <input type="text" size="10" name="word1" value="price"> <br>
+  <p>word2</p>
+  <input type="text" size="10" name="word2"> <br>
+  <p>word3</p>
+  <input type="text" size="10" name="word3"> <br>
+  
+  <span id="progress" style="display: none;">PROGRESS BAR</span>
+  <!--<p><br><progress id="progressbar" value="0" max="1000"></progress></p>-->
+<p><a href=# id="calculate" onclick="$('#progress').css('display', 'block'); loadProgressBar();">calculate server side</a>
+<p><a href="/up" id="drum">UPLOAD FILE</a>
+<div id="table"><table></table></div>
+<div id="result1"><span id="result">?</span></div>
+</div>
+<!-- <script src="js/jquery.js">
+var progressbar = $('#progressbar'),
+max = progressbar.attr('max'),
+value = progressbar.val(),
+time = (1000/max)*5;
+
+var loading = function() {
+value += 1;
+addValue = progressbar.val(value);
+if (value == max) {
+  clearInterval(animate);
+}
+}
+$('.progress-value').html(value + '%');
+setInterval(function() {
+  loading();
+}, time);
+var animate = setInterval(function() {
+  loading();
+}, time);
+</script> -->
+<script type="text/javascript">
+function loadProgressBar() {
+   
+        var progressbar = $('#progressbar'),
+            max = progressbar.attr('max'),
+            time = (1000/max)*5,	
+            value = progressbar.val();
+            var loading = function() {
+                value += 1;
+                addValue = progressbar.val(value);
+ 
+                $('.progress-value').html(value + '%');
+ 
+                if (value == max) {
+                    clearInterval(animate);			           
+                }
+            };
+ 
+            var animate = setInterval(function() {
+                loading();
+            }, time);
+    };
+</script>
+	
+</div>
+</div>
+{% endblock %}

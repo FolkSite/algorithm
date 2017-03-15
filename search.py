@@ -215,19 +215,21 @@ def main_alg(url, link, words, posts, visited_links, depth):
 def add_numbers():
     urls = request.args.get('url')
     urls =  ('url')
-    word1 = request.args.get('word1')
-    word2 = request.args.get('word2')
-    word3 = request.args.get('word3')
+    #word1 = request.args.get('word1')
+    #word2 = request.args.get('word2')
+    #word3 = request.args.get('word3')
     #value = ''
+    vals=[]
+    vals(execsear(vals))
     words = []
-    #words = set(execsear(value))
+    words.append(vals)
     #words = [str(word1), str(word2), str(word3)]
-    if len(word1.strip()) > 0:
-        words.append(word1)
-    if len(word2.strip()) > 0:
-        words.append(word2)
-    if len(word3.strip()) > 0:
-        words.append(word3)
+    #if len(word1.strip()) > 0:
+    #    words.append(word1)
+    #if len(word2.strip()) > 0:
+    #    words.append(word2)
+    #if len(word3.strip()) > 0:
+    #    words.append(word3)
     posts = [] # список найденных постов
     depth = 3 # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
     if len(urls) > 1:
@@ -251,14 +253,13 @@ def add_numbers():
 def index():
     return render_template('index.html')
 
-#def execsear (value):
-    
-#	value = ''
-#    workbook = load_workbook('data/test_check.xlsx')
-#    worksheet = workbook.active
-#        for i in range (1, 29):
-#            worksheet.(1, i).value
-#    return value
+def execsear (value, vals):
+    vals = []
+    value = ''
+    workbook = load_workbook('data/test_check.xlsx')
+    worksheet = workbook.active
+    vals = [v[0].value for v in sheet.range('B1:B2')]
+    return vals
 			
 def run(url, words):
     posts = [] # список найденных постов
