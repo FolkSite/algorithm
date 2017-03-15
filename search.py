@@ -49,7 +49,8 @@ def upload_file():
     <h1>Upload new File</h1>
     <form method=post enctype=multipart/form-data>
       <p><input type=file name=file>
-         <input type=submit value=Upload>
+         <--<input type=submit value=Upload> -->
+         <a href = "/upload"> LOOK File </a>
     </form>
     '''
 	
