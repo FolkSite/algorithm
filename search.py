@@ -6,13 +6,16 @@ from bs4 import BeautifulSoup
 import argparse
 import csv
 from werkzeug.utils import secure_filename
+from xlutils.copy import copy
 import os
+import os.path
 from flask import send_from_directory
 import flask_excel as excel
 from flask import Flask
 from flask import request, render_template, redirect, url_for, jsonify
 import xlrd
 from openpyxl import load_workbook
+from json2html import *
 
 UPLOAD_FOLDER = 'data'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'csv', 'xls', 'xlsx', 'docx'])
@@ -59,23 +62,69 @@ def uploaded_file(filename):
 
 @app.route('/upload/', methods=['GET', 'POST'])
 def uploadu_file():
+
     if request.method == 'POST':
-        return jsonify({"result": request.get_array(field_name='file', encoding = "win-1251")})
+        return jsonify({"result": request.get_array(field_name='file', encoding = 'utf-8')})
+		
     return '''
     <!doctype html>
     <title>Upload an excel file</title>
     <h1>Excel file upload (csv, tsv, csvz, tsvz only)</h1>
     <form action="" method=post enctype=multipart/form-data>
     <p><input type=file name=file><input type=submit value=Upload>
+	<script>
+	Ext.onReady(function(){
+    var tpl = new Ext.XTemplate
+        ('<h1>TIOBE Rate</h1>',
+        '<table>',
+        '<tr>',
+        '<td>Позиция на Ноябрь 2012</td>',
+        '<td>Язык программирования</td>',
+        '<td>Рейтинг</td>',
+        '</tr>',
+        '<tpl for=".">',
+            '<tr>',
+            '<td>{position}</td>',
+            '<td>{title}</td>',
+            '<td>{rate}</td>',
+            '</tr>',
+        '</tpl>',
+        '</table>');                          
+tpl.overwrite(Ext.getBody(), tiobeData);
+});
+	</script>
    </form>
     '''
-
+	
 @app.route('/export', methods=['GET'])
 def export_records():
-    return excel.make_response_from_array([[1,2], [3, 4]], 'csv',
-                                          file_name="file", encoding = "ISO-8859-1")
+    return excel.make_response_from_array([[1,2], [3, 4]], 'xlsx',
+                                          file_name="data/Log/changelogs", encoding = "ISO-8859-1")
 										  
-										  
+										 
+										 
+@app.route('/upfile', methods=['POST'])
+def upload():
+    # I find it more elegant to iterate rather than specify a key
+    for element in request.files:
+        file = request.files[element]
+        safe_name = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], safe_name))
+
+    # For Ext.form.action.Submit you need to return 'text/html' as a mimetype
+    # instead of json (Even though the response is actually json). I'm not sure
+    # why. There are many examples where people manually construct the response
+    # That I dug through during my confusion. Below is a response object that
+    # works.
+    response = make_response('{"success":true}')
+    response.mimetype = 'text/html'
+    return response
+
+	@app.route('/app.js')
+def sencha_app():
+    return redirect(url_for('static', filename='app.js'))
+	
+	
 def parse_links(links, visited, url):
     # убираем ссылки на на js и  css файлы
     timelist = []
@@ -220,7 +269,7 @@ def add_numbers():
     #word3 = request.args.get('word3')
     #value = ''
     vals=[]
-    vals(execsear(vals))
+    vals = set(execsear(vals))
     words = []
     words.append(vals)
     #words = [str(word1), str(word2), str(word3)]
@@ -253,11 +302,13 @@ def add_numbers():
 def index():
     return render_template('index.html')
 
-def execsear (value, vals):
+def execsear (vals):
     vals = []
     value = ''
-    workbook = load_workbook('data/test_check.xlsx')
+    workbook = open_workbook('data/test_check.xlsx')
     worksheet = workbook.active
+    wb = (workbook)
+    sheet = wb.get_sheet(0) 
     vals = [v[0].value for v in sheet.range('B1:B2')]
     return vals
 			
