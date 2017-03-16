@@ -15,7 +15,6 @@ from flask import Flask
 from flask import request, render_template, redirect, url_for, jsonify
 import xlrd
 from openpyxl import load_workbook
-from json2html import *
 
 UPLOAD_FOLDER = 'data'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'csv', 'xls', 'xlsx', 'docx'])
@@ -31,13 +30,11 @@ def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
-            flash('No file part')
             return redirect(request.url)
         file = request.files['file']
         # if user does not select file, browser also
         # submit a empty part without filename
         if file.filename == '':
-            flash('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -75,23 +72,7 @@ def export_records():
                                           file_name="data/Log/changelogs", encoding = "ISO-8859-1")
 										  
 										 
-										 
-@app.route('/upfile', methods=['POST'])
-def upload():
-    # I find it more elegant to iterate rather than specify a key
-    for element in request.files:
-        file = request.files[element]
-        safe_name = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], safe_name))
 
-    # For Ext.form.action.Submit you need to return 'text/html' as a mimetype
-    # instead of json (Even though the response is actually json). I'm not sure
-    # why. There are many examples where people manually construct the response
-    # That I dug through during my confusion. Below is a response object that
-    # works.
-    response = make_response('{"success":true}')
-    response.mimetype = 'text/html'
-    return response
 
 @app.route('/app.js')
 def sencha_app():
@@ -244,6 +225,7 @@ def add_numbers():
     vals = execsear()
     words = []
     words.extend(vals)
+    print(words)
     #words = [str(word1), str(word2), str(word3)]
     #if len(word1.strip()) > 0:
     #    words.append(word1)
@@ -275,16 +257,19 @@ def index():
     return render_template('index.html')
 
 
-def execsear():
-    import openpyxl as xl
-    workbook = xlrd.open_workbook('data/test_check.xlsx')
-    rb = xl.load_workbook('data/test_check.xlsx')
-    sheet = rb.sheet_by_index(0)
+def execsear(row=None):
+    with open('data/test_check1.csv', 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        vals = [row]
+        keyworda = 1
+        for row in reader:
+            for (keyworda) in reader:
+                vals.append(row)
+            #print (row)
     # # worksheet = workbook.active
     # wb = (workbook)
     # if wb.get_sheet(0):
     #     sheet = wb.get_sheet(0)
-    vals = [v[0].value for v in sheet.range('B1:B29')]
     return vals
 			
 def run(url, words):
