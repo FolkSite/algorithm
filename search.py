@@ -1,4 +1,6 @@
-﻿import pyexcel.ext.xlsx
+﻿#!/usr/bin/python
+# -*- coding: <cp1252> -*-
+import pyexcel.ext.xlsx
 from urllib.request import urlopen
 from urllib import error
 import re
@@ -166,7 +168,7 @@ def get_text(html, link):
 
 def read_url(url):
     with urlopen(url) as data:
-        enc = data.info().get_content_charset('utf-8')
+        enc = data.info().get_content_charset().encode('utf-8')
         html = data.read().decode(enc)
     return html
 
@@ -222,8 +224,10 @@ def main_alg(url, link, words, posts, visited_links, depth):
 
 @app.route('/_findwords')
 def add_numbers():
-    urls = request.args.get('url')
-    urls = ('url')
+    #urls = request.args.get('url')
+    urls = execsear()
+    urls.extend(urls)
+    print('urls')
     # word1 = request.args.get('word1')
     # word2 = request.args.get('word2')
     # word3 = request.args.get('word3')
@@ -264,17 +268,23 @@ def index():
 
 
 def execsear(row=None):
-    with open('data/test_check1.csv', 'r') as csvfile:
+
+    with open(u'data/test_check1.csv', "r", encoding="latin-1") as csvfile:
         fieldnames = ['url', 'keyworda']
         reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=';')
         vals=[]
+        urls=[]
         values = []
         for row in reader:
-            text=row['keyworda']
+            text = row['keyworda']
+            url = row['url']
             if len(text.strip()) > 0:
                 values.append(text)
                 vals.extend(values)
+            if len(url.strip()) > 0:
+                urls.append(url)
         print(values)
+        print(urls)
     # # worksheet = workbook.active
     # wb = (workbook)
     # if wb.get_sheet(0):

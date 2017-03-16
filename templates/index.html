@@ -117,7 +117,7 @@ margin:auto;
   $(function() {
     var submit_form = function(e) {
       $.getJSON($SCRIPT_ROOT + '/_findwords', {
-        url: $('input[name="url"]').val(),
+        /*url: $('input[name="url"]').val(),*/
 		/*word1: $('input[name="word1"]').val(),
 		word2: $('input[name="word2"]').val(),
 		word3: $('input[name="word3"]').val() */
@@ -126,6 +126,7 @@ margin:auto;
         $('#result').html(data.result);
         $('input[name=url]').focus().select();
 		$('#progress').css('display', 'none');
+		console.log(data.result)
       });
       return false;
     };
@@ -146,7 +147,7 @@ margin:auto;
   <p>url</p>
   <input type="text" size="20" name="url" value="http://toyota-axsel.com"> <br>
   <p>word1</p>
-  <input type="text" size="10" name="word1" value="price"> <br>
+  <input type="text" size="10" name="word1" > <br>
   <p>word2</p>
   <input type="text" size="10" name="word2"> <br>
   <p>word3</p>
@@ -157,7 +158,7 @@ margin:auto;
 <p><a href=# id="calculate" onclick="$('#progress').css('display', 'block'); loadProgressBar();">calculate server side</a>
 <p><a href="/upload" id="drum">UPLOAD FILE</a>
 <div id="table"><table></table></div>
-<div id="result1"><span id="result">?</span></div>
+<div id="result1"><span id="result"></span></div>
 </div>
 <!-- <script src="js/jquery.js">
 var progressbar = $('#progressbar'),
