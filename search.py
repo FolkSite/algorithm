@@ -21,9 +21,12 @@ ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'csv', 'xls', 'xlsx', 'docx'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/up', methods=['GET', 'POST'])
 def upload_file():
@@ -49,36 +52,34 @@ def upload_file():
          <a href = "/upload"> LOOK File </a>
     </form>
     '''
-	
-	
+
+
 @app.route('/data/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
-							   
+
 
 @app.route('/upload/', methods=['GET', 'POST'])
 def uploadu_file():
-
     if request.method == 'POST':
-        return render_template('upfile.html', result_tab = {"result": request.get_array(field_name='file', encoding = 'utf-8')})
-		
+        return render_template('upfile.html',
+                               result_tab={"result": request.get_array(field_name='file', encoding='utf-8')})
+
     return render_template('upfile.html')
 
-	
+
 @app.route('/export', methods=['GET'])
 def export_records():
-    return excel.make_response_from_array([[1,2], [3, 4]], 'xlsx',
-                                          file_name="data/Log/changelogs", encoding = "ISO-8859-1")
-										  
-										 
+    return excel.make_response_from_array([[1, 2], [3, 4]], 'xlsx',
+                                          file_name="data/Log/changelogs", encoding="ISO-8859-1")
 
 
 @app.route('/app.js')
 def sencha_app():
     return redirect(url_for('static', filename='app.js'))
-	
-	
+
+
 def parse_links(links, visited, url):
     # убираем ссылки на на js и  css файлы
     timelist = []
@@ -86,35 +87,36 @@ def parse_links(links, visited, url):
     copy_links = links.copy()
     for link in copy_links:
         timelist.extend(link.split("/"))
-        if ".js" in timelist[len(timelist)-1].lower() or ".css" in timelist[len(timelist)-1].lower():
+        if ".js" in timelist[len(timelist) - 1].lower() or ".css" in timelist[len(timelist) - 1].lower():
             links.remove(link)
-        elif "." in timelist[len(timelist)-1].lower():
-            timelist=timelist[len(timelist) - 1].lower().split(".")
+        elif "." in timelist[len(timelist) - 1].lower():
+            timelist = timelist[len(timelist) - 1].lower().split(".")
             if "html" not in timelist and "php" not in timelist:
                 links.remove(link)
         elif link in visited:
             links.remove(link)
-        elif len(re.findall("[.,\-\s\?*\{\}\#]" , timelist[len(timelist)-1].lower())):
+        elif len(re.findall("[.,\-\s\?*\{\}\#]", timelist[len(timelist) - 1].lower())):
             links.remove(link)
         else:
             truelinks.append(link)
-    #чистит список от ссылок на левые сайты (почти все)
+    # чистит список от ссылок на левые сайты (почти все)
     copy = truelinks.copy()
     for link in copy:
         if link.startswith("http://") or link.startswith("https://"):
             if not url.split("/")[2] == link.split("/")[2]:
                 truelinks.remove(link)
-            #и от самого себя
+            # и от самого себя
             elif url == link:
                 truelinks.remove(link)
             elif not link.startswith(url):
                 truelinks.remove(link)
         elif not link.startswith("//ww"):
-            truelinks.append(url+link[1:])
+            truelinks.append(url + link[1:])
             truelinks.remove(link)
         else:
             truelinks.remove(link)
     return truelinks
+
 
 def get_links(html, url, visited):
     links = [link[0] for link in list(set(re.findall('"((http|ftp)s?://.*?)"', html)))]
@@ -127,6 +129,7 @@ def get_links(html, url, visited):
     truelinks2 = list(set(truelinks2))
 
     return truelinks2
+
 
 def get_text(html, link):
     soup = BeautifulSoup(html, "lxml")
@@ -152,11 +155,14 @@ def get_text(html, link):
         # break multi-headlines into a line each
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         # drop blank lines
-        text2 = '<a style="cursor: pointer;" onClick=\'$("#nmb' + str(idx) + '").css("display", "block");\'>' + link + '</a>' + '<div style="display: none; border: solid 1px black;" id="nmb' + str(idx) + '">' + ''.join(chunk for chunk in chunks if chunk) + '</div><br/>'
+        text2 = '<a style="cursor: pointer;" onClick=\'$("#nmb' + str(
+            idx) + '").css("display", "block");\'>' + link + '</a>' + '<div style="display: none; border: solid 1px black;" id="nmb' + str(
+            idx) + '">' + ''.join(chunk for chunk in chunks if chunk) + '</div><br/>'
         div_saver.remove(text)
         div_saver.append(text2)
 
     return div_saver
+
 
 def read_url(url):
     with urlopen(url) as data:
@@ -164,8 +170,8 @@ def read_url(url):
         html = data.read().decode(enc)
     return html
 
-def find_words(url, text, words, posts):
 
+def find_words(url, text, words, posts):
     for word in words:
         if word in text:
             if url not in posts:
@@ -179,7 +185,7 @@ def main_alg(url, link, words, posts, visited_links, depth):
     if depth == 0:
         return posts
     try:
-    # читаем ссылку и получаем ее html код
+        # читаем ссылку и получаем ее html код
         html = read_url(link)
     except error.URLError as err:
         return posts
@@ -189,20 +195,20 @@ def main_alg(url, link, words, posts, visited_links, depth):
     for text in text_full:
         fwords = find_words(link, text, words, posts)
         if fwords and fwords[0] not in posts:
-            posts.extend([list(set(fwords)-set(posts)), text])
+            posts.extend([list(set(fwords) - set(posts)), text])
         posts = list(set(posts))
         print("posts are found: {0}".format(len(posts)))
-    #for post in posts:
-        #print(post)
+        # for post in posts:
+        # print(post)
     # получаем все ссылки ресурса
     links = get_links(html, url, visited_links)
 
     links2 = []
     count = 0
-    if len(links)>10:
+    if len(links) > 10:
         while count < 10:
             links2.append(links[count])
-            count+=1
+            count += 1
     else:
         links2 = links
     for link in links2:
@@ -210,36 +216,36 @@ def main_alg(url, link, words, posts, visited_links, depth):
             visited_links.append(link)
             posts.extend(main_alg(url, link, words, posts, visited_links, depth - 1))
         except error.HTTPError as e:
-               print("bad request")
+            print("bad request")
     return posts
 
 
 @app.route('/_findwords')
 def add_numbers():
     urls = request.args.get('url')
-    urls =  ('url')
-    #word1 = request.args.get('word1')
-    #word2 = request.args.get('word2')
-    #word3 = request.args.get('word3')
-    #value = ''
-    vals = execsear()
+    urls = ('url')
+    # word1 = request.args.get('word1')
+    # word2 = request.args.get('word2')
+    # word3 = request.args.get('word3')
+    # value = ''
+    values = execsear()
     words = []
-    words.extend(vals)
+    words.extend(values)
     print(words)
-    #words = [str(word1), str(word2), str(word3)]
-    #if len(word1.strip()) > 0:
+    # words = [str(word1), str(word2), str(word3)]
+    # if len(word1.strip()) > 0:
     #    words.append(word1)
-    #if len(word2.strip()) > 0:
+    # if len(word2.strip()) > 0:
     #    words.append(word2)
-    #if len(word3.strip()) > 0:
+    # if len(word3.strip()) > 0:
     #    words.append(word3)
-    posts = [] # список найденных постов
-    depth = 3 # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
+    posts = []  # список найденных постов
+    depth = 3  # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
     if len(urls) > 1:
         for url in urls:
-            visited_links = [url] # was here
+            visited_links = [url]  # was here
             if not url.startswith("http://") and not url.startswith("https://"):
-                url = 'http://'+url
+                url = 'http://' + url
             posts = set(main_alg(url, url, words, posts, visited_links, depth))
             with open('file.csv', 'w') as out:
                 csv_out = csv.writer(out)
@@ -259,23 +265,27 @@ def index():
 
 def execsear(row=None):
     with open('data/test_check1.csv', 'r') as csvfile:
-        reader = csv.DictReader(csvfile)
-        vals = [row]
-        keyworda = 1
+        fieldnames = ['url', 'keyworda']
+        reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=';')
+        vals=[]
+        values = []
         for row in reader:
-            for (keyworda) in reader:
-                vals.append(row)
-            #print (row)
+            text=row['keyworda']
+            if len(text.strip()) > 0:
+                values.append(text)
+                vals.extend(values)
+        print(values)
     # # worksheet = workbook.active
     # wb = (workbook)
     # if wb.get_sheet(0):
     #     sheet = wb.get_sheet(0)
-    return vals
-			
+    return values
+
+
 def run(url, words):
-    posts = [] # список найденных постов
-    depth = 3 # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
-    visited_links = [url] # was here
+    posts = []  # список найденных постов
+    depth = 3  # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
+    visited_links = [url]  # was here
     print(url)
     print(words)
     posts = set(main_alg(url, url, words, posts, visited_links, depth))
@@ -287,11 +297,11 @@ def run(url, words):
         csv_out.writerow(['link', 'text'])
         for row in posts:
             csv_out.writerow(row)
-    #print(posts)
+            # print(posts)
+
 
 if __name__ == '__main__':
     # включает веб морду
     app.run()
     # для тестов без веб-морды
-    #run('http://toyota-axsel.com', ["price"])
-
+    # run('http://toyota-axsel.com', ["price"])
