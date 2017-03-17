@@ -51,6 +51,7 @@ def upload_file():
     <h1>Upload new File</h1>
     <form method=post enctype=multipart/form-data>
       <p><input type=file name=file>
+         <input type=submit value=Upload>
          <a href = "/upload"> LOOK File </a>
     </form>
     '''
@@ -66,15 +67,15 @@ def uploaded_file(filename):
 def uploadu_file():
     if request.method == 'POST':
         return render_template('upfile.html',
-                               result_tab={"result": request.get_array(field_name='file', encoding='utf-8')})
+                               result_tab={"result": request.get_array(field_name='file', encoding='Windows-1251')})
 
     return render_template('upfile.html')
 
 
 @app.route('/export', methods=['GET'])
 def export_records():
-    return excel.make_response_from_array([[1, 2], [3, 4]], 'xlsx',
-                                          file_name="data/Log/changelogs", encoding="ISO-8859-1")
+    return excel.make_response_from_array([[1, 2], [3, 4]], 'csv',
+                                          file_name="file", encoding="ISO-8859-1")
 
 
 @app.route('/app.js')
@@ -168,7 +169,7 @@ def get_text(html, link):
 
 def read_url(url):
     with urlopen(url) as data:
-        enc = data.info().get_content_charset().encode('utf-8')
+        enc = data.info().get_content_charset('utf-8')
         html = data.read().decode(enc)
     return html
 
@@ -178,7 +179,7 @@ def find_words(url, text, words, posts):
         if word in text:
             if url not in posts:
                 pattern = re.compile(word, re.IGNORECASE)
-                text = pattern.sub('<span style="color: red;">' + word + '</span>', text)
+                text = pattern.sub(word, text)
                 posts.append((url, text))
     return posts
 
@@ -225,17 +226,16 @@ def main_alg(url, link, words, posts, visited_links, depth):
 @app.route('/_findwords')
 def add_numbers():
     #urls = request.args.get('url')
-    urls = execsear()
-    urls.extend(urls)
-    print('urls')
+    a= execsear()
+    urls=[]
+    urls.extend(a[0])
     # word1 = request.args.get('word1')
     # word2 = request.args.get('word2')
     # word3 = request.args.get('word3')
     # value = ''
-    values = execsear()
     words = []
-    words.extend(values)
-    print(words)
+    words.extend(a[1])
+
     # words = [str(word1), str(word2), str(word3)]
     # if len(word1.strip()) > 0:
     #    words.append(word1)
@@ -269,27 +269,30 @@ def index():
 
 def execsear(row=None):
 
-    with open(u'data/test_check1.csv', "r", encoding="latin-1") as csvfile:
+    with open(u'data/test_check1.csv', "r", encoding="Windows-1251") as csvfile:
         fieldnames = ['url', 'keyworda']
         reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=';')
         vals=[]
         urls=[]
         values = []
+        back = []
         for row in reader:
             text = row['keyworda']
             url = row['url']
-            if len(text.strip()) > 0:
-                values.append(text)
-                vals.extend(values)
-            if len(url.strip()) > 0:
-                urls.append(url)
+            #if len(text.strip()) > 0:
+            values.append(text)
+            vals.extend(values)
+          #  if len(url.strip()) > 0:
+            urls.append(url)
         print(values)
         print(urls)
     # # worksheet = workbook.active
     # wb = (workbook)
     # if wb.get_sheet(0):
     #     sheet = wb.get_sheet(0)
-    return values
+        back.append(urls)
+        back.append(values)
+    return back
 
 
 def run(url, words):
