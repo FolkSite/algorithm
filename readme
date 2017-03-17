@@ -1,0 +1,98 @@
+def execsear(row=None):
+    with open(u'data/test_check1.csv', "r", encoding="Windows-1251") as csvfile:
+    
+    Берет файл в формате csv 
+    
+        fieldnames = ['url', 'keyworda']
+        Ставит триггеры для полей в csv
+        reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=';')
+        Считывает файл
+        vals=[]
+        urls=[]
+        values = []
+        back = []
+        for row in reader:
+        Делает выборку значений для значений ячеек
+            text = row['keyworda']
+            url = row['url']
+            #if len(text.strip()) > 0:
+            values.append(text)
+            vals.extend(values)
+            #if len(url.strip()) > 0:
+            urls.append(url)
+            Отключил проверку для ячеек т.к nullobject
+        print(values)
+        print(urls)
+    # # worksheet = workbook.active
+    # wb = (workbook)
+    # if wb.get_sheet(0):
+    #     sheet = wb.get_sheet(0)
+        back.append(urls)
+        back.append(values)
+        Пердает в основной массив
+    return back
+    
+    
+    UPLOAD_FOLDER = 'data'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'csv', 'xls', 'xlsx', 'docx'])
+Переменные хранят directory куда грузить файлы. 
+И доступные форматы для загрузки на серв.
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+Добавляет в конфиг директорию.
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+уравнивает все слова.
+
+@app.route('/up', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('uploaded_file', filename=filename))
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+      <p><input type=file name=file>
+         <input type=submit value=Upload>
+         <a href = "/upload"> LOOK File </a>
+    </form>
+    '''
+    _________^____________
+Генерирует страницу с формой загрузки на сервер и с помощью метода пост загружет файл в обозначенную директорию
+
+@app.route('/data/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename)
+
+
+(
+@app.route('/upload', methods=['GET', 'POST'])
+def uploadu_file():
+    import csv
+    import xlutils
+    import xlrd
+    if request.method == 'POST':
+        return render_template('upfile.html',
+                               result_tab={"result": request.get_array(field_name='file', encoding="utf-8")})
+
+    return render_template('upfile.html')
+
+
+Распаршивает файл и выводит в виде таблицы с помощью js в темплейте
+)
