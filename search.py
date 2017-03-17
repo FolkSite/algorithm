@@ -65,9 +65,12 @@ def uploaded_file(filename):
 
 @app.route('/upload/', methods=['GET', 'POST'])
 def uploadu_file():
+    import csv
+    import xlutils
+    import xlrd
     if request.method == 'POST':
         return render_template('upfile.html',
-                               result_tab={"result": request.get_array(field_name='file', encoding='Windows-1251')})
+                               result_tab={"result": request.get_array(field_name='file', encoding="utf-8")})
 
     return render_template('upfile.html')
 
@@ -251,7 +254,7 @@ def add_numbers():
             if not url.startswith("http://") and not url.startswith("https://"):
                 url = 'http://' + url
             posts = set(main_alg(url, url, words, posts, visited_links, depth))
-            with open('file.csv', 'w') as out:
+            with open('file.xlsx', 'w') as out:
                 csv_out = csv.writer(out)
                 csv_out.writerow(['link', 'text'])
                 for row in posts:
