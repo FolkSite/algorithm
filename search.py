@@ -77,7 +77,7 @@ def uploadu_file():
 
 @app.route('/export', methods=['GET'])
 def export_records():
-    return excel.make_response_from_array([[1, 2], [3, 4]], 'csv',
+    return excel.make_response_from_array([[1, 2], [3, 4]], 'xlsx',
                                           file_name="file", encoding="ISO-8859-1")
 
 
@@ -161,9 +161,7 @@ def get_text(html, link):
         # break multi-headlines into a line each
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         # drop blank lines
-        text2 = '<a style="cursor: pointer;" onClick=\'$("#nmb' + str(
-            idx) + '").css("display", "block");\'>' + link + '</a>' + '<div style="display: none; border: solid 1px black;" id="nmb' + str(
-            idx) + '">' + ''.join(chunk for chunk in chunks if chunk) + '</div><br/>'
+        text2 = link.join(chunk for chunk in chunks if chunk)
         div_saver.remove(text)
         div_saver.append(text2)
 
