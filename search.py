@@ -1,28 +1,37 @@
 ﻿#!/usr/bin/python
-# -*- coding: <cp1252> -*-
-import pyexcel.ext.xlsx
+from logging.handlers import RotatingFileHandler
 from urllib.request import urlopen
 from urllib import error
 import re
-from bs4 import BeautifulSoup
-import argparse
-import csv
-from werkzeug.utils import secure_filename
-from xlutils.copy import copy
-import os
-import os.path
-from flask import send_from_directory
-import flask_excel as excel
-from flask import Flask
-from flask import request, render_template, redirect, url_for, jsonify
-import xlrd
-from openpyxl import load_workbook
 
-UPLOAD_FOLDER = 'data'
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'csv', 'xls', 'xlsx', 'docx'])
+import itertools
+from bs4 import BeautifulSoup
+import csv
+
+from flask import Flask
+from flask import request, render_template, redirect, url_for, jsonify, send_file
+from flask import send_file
+from flask import send_from_directory
+from openpyxl import load_workbook
+import pandas
+from multiprocessing import Pool, Process
+from multiprocessing.dummy import Pool as ThreadPool
+import subprocess
+import logging
+import os
+
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = 'static'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'csv', 'xls', 'xlsx', 'docx'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+@app.route('/app.js')
+def sencha_app():
+    return redirect(url_for('static', filename='app.js'))
 
 
 def allowed_file(filename):
@@ -30,7 +39,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/up', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
@@ -44,46 +53,25 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_file', filename=filename))
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <p><input type=file name=file>
-         <input type=submit value=Upload>
-         <a href = "/upload"> LOOK File </a>
-    </form>
-    '''
+            return redirect(url_for('upload_file', filename=filename))
 
 
-@app.route('/data/<filename>')
+# return '''
+#     <!doctype html>
+#     <title>Upload new File</title>
+#     <h1>Upload new File</h1>
+#     <form method=post enctype=multipart/form-data>
+#       <p><input type=file name=file>
+#          <input type=submit value=Upload>
+#          <a href = "/upload"> LOOK File </a>
+#     </form>
+#            '''
+
+@app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
 
-
-@app.route('/upload/', methods=['GET', 'POST'])
-def uploadu_file():
-    import csv
-    import xlutils
-    import xlrd
-    if request.method == 'POST':
-        return render_template('upfile.html',
-                               result_tab={"result": request.get_array(field_name='file', encoding="utf-8")})
-
-    return render_template('upfile.html')
-
-
-@app.route('/export', methods=['GET'])
-def export_records():
-    return excel.make_response_from_array([[1, 2], [3, 4]], 'xlsx',
-                                          file_name="file", encoding="ISO-8859-1")
-
-
-@app.route('/app.js')
-def sencha_app():
-    return redirect(url_for('static', filename='app.js'))
 
 
 def parse_links(links, visited, url):
@@ -137,41 +125,52 @@ def get_links(html, url, visited):
     return truelinks2
 
 
-def get_text(html, link):
-    soup = BeautifulSoup(html, "lxml")
+def get_text(html):
+    if html:
+        soup = BeautifulSoup(html, "lxml")
 
-    # kill all script and style elements
-    for script in soup(["script", "style"]):
-        script.extract()  # rip it out
+        # kill all script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()  # rip it out
 
-    # get all div
-    div_saver = []
-    for div in soup(["div"]):
-        div = div.get_text()
-        div_saver.append(div)
+        # get all div
+        div_saver = []
+        for div in soup(["div"]):
+            div = div.get_text()
+            div_saver.append(div)
 
-    div_saver2 = div_saver.copy()
+        div_saver2 = div_saver.copy()
 
-    for idx, text in enumerate(div_saver2):
-        # get text - если soup.body.get_text() - вернет только боди тд по аналогии
-        # text = soup.get_text()
+        for text in div_saver2:
+            # get text - если soup.body.get_text() - вернет только боди тд по аналогии
+            # text = soup.get_text()
 
-        # break into lines and remove leading and trailing space on each
-        lines = (line.strip() for line in text.splitlines())
-        # break multi-headlines into a line each
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        # drop blank lines
-        text2 = link.join(chunk for chunk in chunks if chunk)
-        div_saver.remove(text)
-        div_saver.append(text2)
+            # break into lines and remove leading and trailing space on each
+            lines = (line.strip() for line in text.splitlines())
+            # break multi-headlines into a line each
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            # drop blank lines
+            text2 = ".".join(chunk for chunk in chunks if chunk)
+            div_saver.remove(text)
+            div_saver.append(text2)
 
-    return div_saver
+        return div_saver
+    else:
+        return " "
 
 
 def read_url(url):
-    with urlopen(url) as data:
-        enc = data.info().get_content_charset('utf-8')
-        html = data.read().decode(enc)
+    try:
+        with urlopen(url) as data:
+            enc = data.info().get_content_charset('utf-8')
+            try:
+                html = data.read().decode(enc)
+            except UnicodeDecodeError:
+                print("bad unicode decoding")
+                return None
+    except UnicodeEncodeError:
+        print("bad unicode decoding")
+        return None
     return html
 
 
@@ -193,8 +192,15 @@ def main_alg(url, link, words, posts, visited_links, depth):
         html = read_url(link)
     except error.URLError as err:
         return posts
+    except UnicodeEncodeError:
+        return posts
+    app.logger.warning('A warning occurred (%d apples)', 42)
+    app.logger.error('An error occurred')
+    app.logger.info('Info')
+    if not html:
+        html = ''
     # получаем строку с текстом в cсылке
-    text_full = list(set(get_text(html, link)))
+    text_full = list(set(get_text(html)))
     # ищем слова и получаем назад список постов, где они были найдены
     for text in text_full:
         fwords = find_words(link, text, words, posts)
@@ -202,6 +208,7 @@ def main_alg(url, link, words, posts, visited_links, depth):
             posts.extend([list(set(fwords) - set(posts)), text])
         posts = list(set(posts))
         print("posts are found: {0}".format(len(posts)))
+
         # for post in posts:
         # print(post)
     # получаем все ссылки ресурса
@@ -221,46 +228,124 @@ def main_alg(url, link, words, posts, visited_links, depth):
             posts.extend(main_alg(url, link, words, posts, visited_links, depth - 1))
         except error.HTTPError as e:
             print("bad request")
+
     return posts
 
 
 @app.route('/_findwords')
 def add_numbers():
-    #urls = request.args.get('url')
-    a= execsear()
-    urls=[]
+    # get links and keywords
+    a = execsear()
+    urls = []
     urls.extend(a[0])
-    # word1 = request.args.get('word1')
-    # word2 = request.args.get('word2')
-    # word3 = request.args.get('word3')
-    # value = ''
     words = []
     words.extend(a[1])
 
-    # words = [str(word1), str(word2), str(word3)]
-    # if len(word1.strip()) > 0:
-    #    words.append(word1)
-    # if len(word2.strip()) > 0:
-    #    words.append(word2)
-    # if len(word3.strip()) > 0:
-    #    words.append(word3)
-    posts = []  # список найденных постов
-    depth = 3  # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
+    depth = 2  # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
+    # read from csv marks and models
+    cars_file = "static/cars_csv.csv"
+    marks_and_models = read_csv(cars_file)
+    filename = 'reader.xlsx'
+
     if len(urls) > 1:
-        for url in urls:
-            visited_links = [url]  # was here
-            if not url.startswith("http://") and not url.startswith("https://"):
-                url = 'http://' + url
-            posts = set(main_alg(url, url, words, posts, visited_links, depth))
-            with open('file.xlsx', 'w') as out:
-                csv_out = csv.writer(out)
-                csv_out.writerow(['link', 'text'])
-                for row in posts:
-                    csv_out.writerow(row)
-            str_to_serv = ''
-            for post in posts:
-                str_to_serv = str(post) + str_to_serv
-            return jsonify(result=str_to_serv)
+        # разбиваю по 10 итого 50 url
+        urls_for_process = list(group(urls, 5))
+        iterater = 0
+        for url in urls_for_process:
+            # for csv files
+            # filepath = str(iterater) + ".csv"
+            # for xlsx file: filename
+            # subprocess.call(['touch', filepath])
+            post_searcher(url, words, depth, marks_and_models, filename)
+            iterater += 1
+
+
+def group(iterable, count):
+    return zip(*[iter(iterable)] * count)
+
+
+def post_searcher(urls, words, depth, marks_and_models, filename):
+    goods = []
+    for url in urls:
+        posts = []
+        visited_links = [url]  # was here
+        if url[len(url) - 1] == " ":
+            url = del_end_probel(url)
+        if url[0] == " ":
+            url = del_start_probel(url)
+        if not url.startswith("http://") and not url.startswith("https://"):
+            url = 'http://' + url
+
+        posts = set(main_alg(url, url, words, posts, visited_links, depth))
+        if len(posts) < 10:
+            continue
+        print("url:{0}  for post len: {1}".format(url, len(posts)))
+        good = []
+        costs = ["cost", "цен", "скид", "руб", "процент", "клиент", "%"]
+        compons = list(itertools.product(marks_and_models, costs))
+        posts = list(posts)
+        for post in posts:
+            strings = post[1].split(".")
+            for string in strings:
+                for compon in compons:
+                    if compon[0][0] in string and compon[0][1] in post[1] and compon[1] in post[1]:
+                        good.append((post[0], compon[0][0], compon[0][1], post[1]))
+
+        # to write for excisting xlsx
+        write_xlsx(good, filename)
+        # to wite for excisting csv
+        # write_csv(good, filename)
+        goods.extend(good)
+    return jsonify(result_data=goods)
+
+
+def write_csv(good, filename):
+    with open(filename, 'a') as resultFile:
+        wr = csv.writer(resultFile, dialect='excel')
+        wr.writerow(good)
+
+
+def write_xlsx(good, filename):
+    labels = ['link', 'mark', 'model', 'post']
+    df = pandas.DataFrame.from_records(good, columns=labels)
+    book = load_workbook(filename)
+    writer = pandas.ExcelWriter(filename, engine='openpyxl')
+    writer.book = book
+    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+
+    df.to_excel(writer, "Main", columns=labels)
+
+    writer.save()
+
+
+def read_csv(cars_file):
+    with open(cars_file, encoding='mac_roman') as f:
+        datas = [line for line in csv.reader(f)]
+    list_data = []
+    for data in datas:
+        data = data[0].split(";")
+        if data[0]:
+            list_data.append((data[0], data[1]))
+
+    return list_data
+
+
+def del_start_probel(url):
+    url = url[1:]
+    if url[0] == " ":
+        url = del_start_probel(url)
+        return url
+    else:
+        return url
+
+
+def del_end_probel(url):
+    url = url[:-1]
+    if url[len(url) - 1] == " ":
+        url = del_end_probel(url)
+        return url
+    else:
+        return url
 
 
 @app.route('/')
@@ -268,54 +353,46 @@ def index():
     return render_template('index.html')
 
 
-def execsear(row=None):
-
-    with open(u'data/test_check1.csv', "r", encoding="Windows-1251") as csvfile:
-        fieldnames = ['url', 'keyworda']
-        reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=';')
-        vals=[]
-        urls=[]
-        values = []
-        back = []
-        for row in reader:
-            text = row['keyworda']
-            url = row['url']
-            #if len(text.strip()) > 0:
-            values.append(text)
-            vals.extend(values)
-          #  if len(url.strip()) > 0:
-            urls.append(url)
-        print(values)
-        print(urls)
-    # # worksheet = workbook.active
-    # wb = (workbook)
-    # if wb.get_sheet(0):
-    #     sheet = wb.get_sheet(0)
-        back.append(urls)
-        back.append(values)
-    return back
+@app.route('/return-files/')
+def return_files_tut():
+    try:
+        return send_file('reader.xlsx', attachment_filename='reader.xlsx')
+    except Exception as e:
+        return str(e)
 
 
-def run(url, words):
-    posts = []  # список найденных постов
-    depth = 3  # размерность поиска вглубину (кол-во страниц сайта, которые мы просмотрим)
-    visited_links = [url]  # was here
-    print(url)
-    print(words)
-    posts = set(main_alg(url, url, words, posts, visited_links, depth))
-    # with open('file.csv', 'w') as csvfile:
-    #     spamwriter = csv.writer(csvfile,  delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL, dialect='excel')
-    #     spamwriter.writerow(posts)
-    with open('file.csv', 'w') as out:
-        csv_out = csv.writer(out)
-        csv_out.writerow(['link', 'text'])
-        for row in posts:
-            csv_out.writerow(row)
-            # print(posts)
+@app.route('/file-downloads/')
+def file_downloads():
+    try:
+        return render_template('downloads.html')
+    except Exception as e:
+        return str(e)
 
+
+def execsear():
+    wb = load_workbook('static/test_check.xlsx')
+    ws = wb['data']
+    links = []
+    words = []
+    for col in ws['A']:
+        if not col.value == None:
+            links.append(col.value)
+    for col in ws['B']:
+        if not col.value == None:
+            words.append(col.value)
+
+    return [links, words]
+
+
+# def loginn ():
+#    with open(os.path.join(APP_STATIC, 'english_words.txt')) as f:
+#        f.read()
 
 if __name__ == '__main__':
     # включает веб морду
     app.run()
+    handler = RotatingFileHandler('foo.log', maxBytes=100000, backupCount=1)
+    handler.setLevel(logging.INFO)
+    app.logger.addHandler(handler)
     # для тестов без веб-морды
     # run('http://toyota-axsel.com', ["price"])

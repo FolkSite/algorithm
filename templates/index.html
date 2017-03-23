@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
- <style>
+   <style>
             table {
                 border-collapse: collapse;
                 border: 2px black solid;
@@ -13,6 +13,78 @@
             }
         </style>
 		<style>
+		*,
+*:after,
+*::before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+
+nav a {
+	position: relative;
+	display: inline-block;
+	margin: 15px 25px;
+	outline: none;
+	color: #fff;
+	text-decoration: none;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 400;
+	text-shadow: 0 0 1px rgba(255,255,255,0.3);
+	font-size: 1.35em;
+}
+nav a:hover,
+nav a:focus {
+	outline: none;
+}
+}
+#bodys{
+	max-width: 100%;
+	min-width:50%;
+	background-color: #aaaaaa;
+	max-height:100%;
+	min-height:90%;
+}
+
+nav a:hover,
+nav a:focus {
+	outline: none;
+}
+.cl-effect-1 a::before,
+.cl-effect-1 a::after {
+	display: inline-block;
+	opacity: 0;
+	-webkit-transition: -webkit-transform 0.3s, opacity 0.2s;
+	-moz-transition: -moz-transform 0.3s, opacity 0.2s;
+	transition: transform 0.3s, opacity 0.2s;
+}
+
+.cl-effect-1 a::before {
+	margin-right: 10px;
+	content: '[';
+	-webkit-transform: translateX(20px);
+	-moz-transform: translateX(20px);
+	transform: translateX(20px);
+}
+
+.cl-effect-1 a::after {
+	margin-left: 10px;
+	content: ']';
+	-webkit-transform: translateX(-20px);
+	-moz-transform: translateX(-20px);
+	transform: translateX(-20px);
+}
+
+.cl-effect-1 a:hover::before,
+.cl-effect-1 a:hover::after,
+.cl-effect-1 a:focus::before,
+.cl-effect-1 a:focus::after {
+	opacity: 1;
+	-webkit-transform: translateX(0px);
+	-moz-transform: translateX(0px);
+	transform: translateX(0px);
+}
+
 #progress {
  color: #0063a6;
   font-size: .6em;
@@ -32,7 +104,7 @@
     padding: 5px;
     width: 80%;
 }
- 
+
 .progress-bar__inner {
     position: relative;
     width: 100%;
@@ -50,15 +122,15 @@
     -webkit-transition: all 0.8s 0.2s;
     transition: all 0.8s 0.2s;
 }
- 
+
 .progress-bar__scale-25 {width: 25%;}
 .progress-bar__scale-50 {width: 50%;}
 .progress-bar__scale-75 {width: 75%;}
 .progress-bar__scale-100 {width: 100%;}
 .invis {visibility: hidden;}
- 
+
 .knowledge-bl__txt-cont {position: relative;}
- 
+
 .knowledge-bl__percentage {
    position: fixed;
     float: left;
@@ -70,7 +142,7 @@
     color: #00adef;
     margin-bottom: 1000px;
 }
- 
+
 .percentage-reserve-100 {
     position: absolute;
     width: 260px;
@@ -88,15 +160,31 @@
   background-color: #ddd;
 } -->
 
-</style>
-<style>
-#bodys{
-	max-width: 100%;
-	min-width:50%;
-	background-color: #aaaaaa;
-	max-height:100%;
-	min-height:90%;
+#border {
+      max-width: 740px;
+    border: 4px ridge grey;
+    padding: 10px;
+    margin: auto;
+
 }
+#innerborder {
+    max-width: 400px;
+    position: relative;
+    border: 4px ridge grey;
+    padding: 10px;
+
+}
+#log {
+      max-width: 300px;
+    position: relative;
+    border: 4px ridge grey;
+    padding: 10px;
+    right: -400px;
+    top: -453px;
+    left: 410px;
+}
+
+
 #polya {
 	width: 1190px;
 	background-color: #ffffff;
@@ -113,6 +201,76 @@ margin:auto;
 
 }
 </style>
+<!-- <script>
+	window.onload = function() {
+		console.log("begin");
+
+		var jsonResult = '{{result_tab}}'.replace(/&#39;/g, '"');
+		console.log(jsonResult);
+		var json = null;
+		try {
+			var table = document.getElementById("json_result");
+			json = JSON.parse(jsonResult);
+			console.log(json.result.length);
+			for (var i = 0; i < json.result.length; i++) {
+				var row = table.insertRow(table.rows.length);
+
+				for (var j = 0; j < json.result[i].length; j++) {
+					var cell = row.insertCell(j);
+					var newText  = document.createTextNode(json.result[i][j]);
+					cell.appendChild(newText);
+				}
+			}
+		} catch(e) {
+			console.log("error " + e);
+		} finally {
+
+		}
+
+		console.log("end");
+	}
+</script> -->
+
+<!--<script>
+var oFileIn;
+
+  $(function() {
+    oFileIn = document.getElementById('my_file_input');
+    if(oFileIn.addEventListener) {
+        oFileIn.addEventListener('change', filePicked, false);
+    }
+            });
+
+
+function filePicked(oEvent) {
+    // Get The File From The Input
+    var oFile = oEvent.target.files[0];
+    var sFilename = oFile.name;
+    // Create A File Reader HTML5
+    var reader = new FileReader();
+
+    // Ready The Event For When A File Gets Selected
+    reader.onload = function(e) {
+        var data = e.target.result;
+        var cfb = XLS.CFB.read(data, {type: 'binary'});
+        var wb = XLS.parse_xlscfb(cfb);
+        // Loop Over Each Sheet
+        wb.SheetNames.forEach(function(sheetName) {
+            // Obtain The Current Row As CSV
+            var sCSV = XLSX.utils.make_csv(wb.Sheets[sheetName]);
+            var oJS = XLSX.utils.sheet_to_row_object_array(wb.Sheets[sheetName]);
+
+            $("#my_file_output").html(sCSV);
+            console.log(oJS)
+        });
+    };
+
+    // Tell JS To Start Reading The File.. You could delay this if desired
+    reader.readAsBinaryString(oFile);
+}
+</script>-->
+
+
 <script type="text/javascript">
   $(function() {
     var submit_form = function(e) {
@@ -123,10 +281,33 @@ margin:auto;
 		word3: $('input[name="word3"]').val() */
       }, function(data) {
 		console.log(data)
-        $('#result').html(data.result);
+      /*  $('#result').html(data.result);*/
+
+	  //var jsonResult = '{{result_tab}}'.replace(/&#39;/g, '"');
+		//console.log(jsonResult);
+		try {
+			var table = document.getElementById("json_result");
+			//json = JSON.parse(data);
+			console.log(data.result_data.length);
+			for (var i = 0; i < data.result_data.length; i++) {
+				var row = table.insertRow(table.rows.length);
+
+				for (var j = 0; j < data.result_data[i].length; j++) {
+					var cell = row.insertCell(j);
+					var newText  = document.createTextNode(data.result_data[i][j]);
+					cell.appendChild(newText);
+				}
+			}
+		} catch(e) {
+			console.log("error " + e);
+		} finally {
+
+		}
+
+
         $('input[name=url]').focus().select();
 		$('#progress').css('display', 'none');
-		console.log(data.result)
+	/* 	console.log(data.result) */
       });
       return false;
     };
@@ -142,9 +323,11 @@ margin:auto;
 
 <div id="bodys">
 <div id="polya">
+<div id ="border">
+    <div id="innerborder">
 <div id="text">
 <p>
-  <p>url</p>
+   <p>url</p>
   <input type="text" size="20" name="url" value="http://toyota-axsel.com"> <br>
   <p>word1</p>
   <input type="text" size="10" name="word1" > <br>
@@ -152,13 +335,33 @@ margin:auto;
   <input type="text" size="10" name="word2"> <br>
   <p>word3</p>
   <input type="text" size="10" name="word3"> <br>
-  
+
   <span id="progress" style="display: none;">PROGRESS BAR</span>
   <!--<p><br><progress id="progressbar" value="0" max="1000"></progress></p>-->
-<p><a href=# id="calculate" onclick="$('#progress').css('display', 'block'); loadProgressBar();">calculate server side</a>
-<p><a href="/up" id="drum">UPLOAD FILE</a>
+<nav class="cl-effect-1">
+<p><a href=# data-hover="Ссылка 1" id="calculate" onclick="$('#progress').css('display', 'block'); loadProgressBar();">Calculate server side</a>
+<!-- <p><a href="/up" data-hover="Upload file" id="drum">Upload file</a> -->
+<p><a href="/file-downloads/" data-hover="Download" id="d">Doawnload file</a>
+</nav>
 <div id="table"><table></table></div>
 <div id="result1"><span id="result"></span></div>
+<form action="" method=post enctype=multipart/form-data>
+    <p><input type="file" id="my_file_input" />
+<div id='my_file_output'></div>
+<!-- <input type=submit value=Upload> -->
+   </form>
+   <table cellpadding=3 cellspacing=0 border=1 id="json_result">
+   </table>
+</div>
+
+</div>
+    <div id = "log">
+
+        </div>
+     <form action="upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Upload">
+      </form>
 </div>
 <!-- <script src="js/jquery.js">
 var progressbar = $('#progressbar'),
